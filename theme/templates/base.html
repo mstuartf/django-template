@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="X-UA-Compatible" content="ie=edge">
+		<title>{% block title %}My app{% endblock %}</title>
+		<meta name="description" content="">
+		<meta name="keywords" content="">
+		<meta name="author" content="">
+
+        <link rel="shortcut icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+        <link rel="icon" href="{% static 'favicon.ico' %}" type="image/x-icon">
+
+        {% block scripts %}{% endblock %}
+        {% block stylesheets %}{% endblock %}
+
+		<link rel="stylesheet" href="{% static 'css/styles.css' %}">
+	</head>
+
+	<body class="h-full bg-gray-200">
+
+		{% block content %}{% endblock %}
+
+        <div class="p-4 pt-5 text-center text-gray-500">
+            Part of <a href="https://www.google.com/" class="underline">My app</a>
+        </div>
+
+	</body>
+
+</html>

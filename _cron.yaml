@@ -1,0 +1,5 @@
+version: 1
+cron:
+ - name: "example-job"
+   url: "/worker/example-job/"
+   schedule: "*/15 * * * *"
