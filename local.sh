@@ -28,6 +28,15 @@ export AWS_LOG_STREAM=""
 
 export AWS_WORKER_QUEUE=""
 
+# EMAIL CONFIG
+
+export ACTIVITY_EMAIL=
+export TEST_EMAIL=
+export FROM_ADDRESS=
+export MAILGUN_BASE_URL=
+export MAILGUN_DOMAIN=
+export MAILGUN_API_KEY=
+
 
 if [ $1 == runserver__ ]
 then

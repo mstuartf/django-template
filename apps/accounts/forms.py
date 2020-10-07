@@ -3,6 +3,8 @@ import logging
 from django.contrib.auth.forms import PasswordResetForm
 from django.urls import reverse
 
+from utils.email_client import EmailClient
+
 logger = logging.getLogger(__name__)
 
 
@@ -21,5 +23,13 @@ class CustomPasswordResetForm(PasswordResetForm):
         reset_link = "{}://{}{}".format(context["protocol"], context["domain"], path)
 
         # this email is sent synchronously to avoid having to send tokens etc in payload to worker
-        logger.info("TODO: send email reset link {} to {}".format(reset_link, to_email))
+        email_client = EmailClient()
+        email_client.send_email(
+            to_email,
+            "Password reset",
+            "password_reset",
+            {
+                "reset_link": reset_link
+            }
+        )
 

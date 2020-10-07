@@ -22,7 +22,7 @@
 * Install dependencies: `$ pip install -r requirements.txt`
 * Note: when using the eb cli you will need to deactivate the virtualenv (`$ pyenv local system` / `$ pyenv deactivate`)
 
-### 1. Configure AWS CLI
+### 2. Configure AWS CLI
 
 * Install the (AWS CLI)[https://aws.amazon.com/cli/] if you do not already have it.
 * Open the AWS console and go to `My Security Credentials` in the main menu. `Under Access keys (access key ID and secret access 
@@ -38,14 +38,14 @@ aws_secret_access_key=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
 
 * We will configure all EB CLI commands from this directory to use this profile in the next step. 
 
-### 2. Init EB project
+### 3. Init EB project
 
 * Init the EB CLI for the directory: `eb init` and follow instructions. This will create an untracked .elasticbeanstalk dir.
 * Setup SSH for project?
 * Open .elasticbeanstalk/config.yml and set `profile` to the name of the profile created in the previous step. This means 
 that you will not have to append `--profile $PROFILE_NAME` to all EB CLI commands.
 
-### 2. Create new EB env
+### 4. Create new EB env
 
 * Create an env using the CLI (make sure to specify postgres): `eb create $ENV_NAME -db -db.engine postgres`
 * Enter a password for the DB (printable ASCII characters, except for white space and the symbols '/', '"', or '@')
@@ -59,7 +59,7 @@ error: `"The SECRET_KEY setting must not be empty."`.
 * Apply configurations.
 * Some values will need to be updated later (e.g. queue names) but adding these ones means the status will update to 'OK'.
 
-### 3. Setup logging
+### 5. Setup logging
 
 * Go to IAM > Users > Add user
 * Enter a username and select Programmatic Access
@@ -71,7 +71,7 @@ error: `"The SECRET_KEY setting must not be empty."`.
 * Hit Apply
 * Go into settings and uncomment the additional configurations in LOGGING
 
-### 4. Setup SSL (skip until you have custom domain)
+### 6. Setup SSL (skip until you have custom domain)
 
 Create a `redirect.config` filein .ebextensions with the following content:
 
@@ -92,14 +92,18 @@ Then configure the load balancer to server over HTTPS:
 
 * Create a eu-west-2 AWS certificate for the API subdomain  (e.g. api.domain.com)
 * Validate domain ownership by adding CNAME records (wait 5min and check certificate is 'issued' in manager).
-* Add a new listener to the EB load balancer on port 443 (HTTPS) forwarding to port 80 (HTTP). Select the certificate 
-you just created. Make sure you apply the changes!
+* Add a new listener to the EB load balancer on port 443 (HTTPS) forwarding to port 80 (HTTP): 
+  * Port: 443, Protocol HTTPS, Instance port: 80, Instance protocol: HTTP.
+* Select the certificate you just created. 
+* Make sure you apply the changes! Refresh the page to check as it can behave weirdly.
 * * If you get a 408, check the ports and protocol values are correct here.
 * Add a CNAME for the API subdomain pointing to EB url (e.g. HOST RECORD: api, POINTS TO: XXX.eu-west-2.elasticbeanstalk.com)
+* Go to the API subdomain in the browser to test: you should get a Disallowed Host error.
+* Add the API subdomain to the ALLOWED_HOSTS env variable.
 
-### 2. Setup worker environment
+### 7. Setup worker environment
 
-#### 2a. Background
+#### a. Background
 
 There are two kinds of EB environments:
 * Web tiers: accept HTTP requests over the internet
@@ -143,14 +147,14 @@ Once you have the worker app set up, all you need to do to offload background ta
 queue in the normal way. For recursive functionality, the worker env itself may wish to add messages to the queue. Again,
 this is just done in the normal way.
 
-#### 2b. Create worker tier with same codebase
+#### b. Create worker tier with same codebase
 
 * Create the worker tier env: `eb create $ENV_NAME-worker --tier worker`
 * The SQS and DL queues are created automatically.
 * Each instance of the worker env will automatically have a daemon process that pulls messages from the queue.
 * Copy environment variables from web tier.
 
-#### 2c. Connect worker tier to same database as web tier
+#### c. Connect worker tier to same database as web tier
 
 * Set these environment variables from [RDS](https://eu-west-2.console.aws.amazon.com/rds/home?region=eu-west-2#databases:): 
  * RDS_HOSTNAME: On the Connectivity & security tab on the Amazon RDS console: Endpoint.
@@ -168,7 +172,7 @@ this is just done in the normal way.
  the eb console > Configuration > Instances).)
  * Save the inbound rule.
  
-#### 2d. Configurations
+#### d. Configurations
 
 * Go to EB > Environments > Configuration > Worker > Messages and set the `Http path` to `/worker/` to post all messages 
 to this endpoint (the trailing slash is important or all requests will get a 301).
@@ -194,12 +198,12 @@ post to this queue.
 }
 ```
  
-#### 2e. Plug in
+#### e. Plug in
 
 * Uncomment apps.worker.client code
 * Redeploy web and worker tiers
  
-### Cron jobs
+### 8. Cron jobs
 
 Once you have the worker setup, you can setup automated jobs by creating a cron.yaml file in the root dir and specifying 
 the worker endpoint to be hit and the schedule. E.g.:
@@ -211,6 +215,11 @@ cron:
    schedule: "*/15 * * * *"
 
 Then add the relevant endpoint in the worker `views.py` and `urls.py` files.
+
+### 9. Emails
+
+* Create a Mailgun account and update the EMAIL CONFIG environment variables from local.sh.
+* Uncomment the send email code in email_client.
 
 ## Running
 

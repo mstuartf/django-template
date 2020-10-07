@@ -5,6 +5,8 @@ import os
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 
+from .handlers import verification
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,7 +35,7 @@ def worker_task_handler(request):
 
     # add conditional handling for tasks here
     if worker_task == "EMAIL_VERIFICATION":
-        logger.info("TODO: send email verification link {} to {}".format(body["VERIFICATION_LINK"], body["ACCOUNT_ID"]))
+        verification.queue_account_email_verification(body["ACCOUNT_ID"], body["VERIFICATION_LINK"])
 
     else:
         logger.info("unrecognised task {}".format(worker_task))
